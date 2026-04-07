@@ -1,8 +1,8 @@
-# JWT Middleware + Protected Route
+# Role-Based Access Control (RBAC)
 
-## 1. Summary of Middleware
+## 1. Summary of RBAC Implementation
 
-Person 2 implemented an authentication middleware to secure the SCMS backend. The middleware intercepts incoming requests, verifies the presence and validity of a strictly formatted JSON Web Token (JWT), and prevents unauthorized users from accessing protected resources by returning a `401 Unauthorized` error if validation fails.
+Person 3 implemented a Role-Based Access Control (RBAC) middleware for the SCMS backend. This layer determines whether an authenticated user (provided by the `authMiddleware`) has the proper authorization (`req.user.role`) to access a given endpoint. It serves as a declarative authorization system that makes protecting high-privilege routes robust and simple.
 
 ---
 
@@ -10,71 +10,55 @@ Person 2 implemented an authentication middleware to secure the SCMS backend. Th
 
 | File | Change |
 |------|--------|
-| `middlewares/authMiddleware.js` | **[NEW]** Added middleware logic to extract and verify JWT tokens |
-| `routes/authRoutes.js` | **[MODIFIED]** Imported `authMiddleware` and created protected `GET /api/auth/profile` route |
+| `middlewares/roleMiddleware.js` | **[NEW]** Added middleware logic to check `req.user.role` against a list of allowed roles |
+| `routes/testRoutes.js` | **[MODIFIED]** Imported middlewares and created RBAC-protected test test routes for admin and faculty |
 
 ---
 
-## 3. How JWT Verification Works
+## 3. How Role Checking Works
 
 ```text
-Client                    Server (authMiddleware)              Protected Route
-  |                                  |                               |
-  |-- GET /profile + JWT Header ---->|                               |
-  |   Authorization: Bearer <token>  |                               |
-  |                                  |-- Validate Header exists      |
-  |                                  |-- Extract Token               |
-  |                                  |-- jwt.verify(token, Secret)   |
-  |                                  |-- Validate success            |
-  |                                  |-- req.user = decoded -------->|
-  |<-- 200 OK: { message, user } ----|-------------------------------|
-  |                                  |                               |
-  |<-- 401 Unauthorized (if fail) ---|                               |
+Client                       Server (roleMiddleware)             Protected Controller
+  |                                     |                                   |
+  |-- GET /admin/dashboard + Token ---->|                                   |
+  |     authMiddleware resolves req.user|                                   |
+  |                                     |-- Evaluate Role                   |
+  |                                     |   allowedRoles = ["admin"]        |
+  |                                     |   req.user.role = "student"       |
+  |                                     |-- Validate inclusion              |
+  |                                     |-- if false                        |
+  |<-- 403 Forbidden -------------------|                                   |
+  |                                     |                                   |
+  |                                     |-- if true (user is admin)         |
+  |                                     |-- next() ------------------------>|
+  |<-- 200 OK: { message } -------------|-----------------------------------|
 ```
 
-1. Client sends request to protected route including `Authorization: Bearer <token>` in headers.
-2. `authMiddleware` checks for header existence.
-3. Splits header to extract token.
-4. Uses `jsonwebtoken` to verify token string using the `JWT_SECRET`.
-5. Upon successful verification, attaches the decoded payload (like `userId` and `role`) to the `req.user` object to be accessible downstream.
-6. Calls `next()` to proceed to route controller; returns `401 Unauthorized` directly if token is missing or invalid.
+1. Route triggers `authMiddleware`, which verifies the JWT token and attaches `req.user` to the request object.
+2. Next, `roleMiddleware` intercepts the request. It takes an array of acceptable roles via a Javascript rest parameter `...allowedRoles`.
+3. It checks if `req.user.role` is present in the `allowedRoles` array.
+4. If true, it calls `next()` to proceed to the route controller.
+5. If false, it promptly returns a `403 Forbidden` response natively restricting access.
 
 ---
 
-## 4. Protected Route Details
+## 4. Routes Protected
 
-### Endpoint
+To demonstrate RBAC, the following test routes have been established:
 
-```
-GET /api/auth/profile
-```
-
-### Purpose
-Acts as a demonstration of protected resource access requiring valid authentication token, returning the attached parsed user payload.
-
-### Request Headers
+### Admin Dashboard (Only `admin`)
 ```http
-Authorization: Bearer <your_jwt_token_here>
+GET /api/admin/dashboard
 ```
+**Access Control:** `authMiddleware`, `roleMiddleware("admin")`
+**Success Response:** `200 OK` → `{ "message": "Welcome Admin" }`
 
-### Success Response — `200 OK`
-```json
-{
-  "message": "Protected route accessed",
-  "user": {
-    "userId": "<MongoDB ObjectId>",
-    "role": "student",
-    "iat": 1712345678,
-    "exp": 1712432078
-  }
-}
+### Faculty Dashboard (Only `faculty`)
+```http
+GET /api/faculty/dashboard
 ```
-
-### Error Responses
-| Scenario | Status | Body |
-|----------|--------|------|
-| No token | `401` | `{ "message": "No token provided" }` |
-| Invalid/Expired token | `401` | `{ "message": "Invalid token" }` |
+**Access Control:** `authMiddleware`, `roleMiddleware("faculty")`
+**Success Response:** `200 OK` → `{ "message": "Welcome Faculty" }`
 
 ---
 
@@ -84,32 +68,32 @@ Authorization: Bearer <your_jwt_token_here>
 |---------|--------|
 | Express server | ✅ Running |
 | MongoDB connection | ✅ Connected |
-| User model | ✅ Implemented |
+| User model (with roles) | ✅ Implemented |
 | Signup API | ✅ Working |
 | Password hashing (bcrypt) | ✅ Implemented |
 | Login API + JWT generation | ✅ Implemented |
-| Auth middleware (Protected Routes) | ✅ **Implemented (Person 2)** |
-| Role-based access control (RBAC) | ⏳ Next step |
+| Auth middleware (Protected Routes) | ✅ Implemented |
+| Role-based access control (RBAC) | ✅ **Implemented (Person 3)** |
+| Course Module | ⏳ Next step |
 
 ---
 
-## 6. Next Step Readiness — Role-Based Access Control
+## 6. Next Step Readiness — Course Module
 
-The foundation for protected routes is now solidly in place.
-With the `authMiddleware` verifying standard access and extracting JWT payloads into `req.user`, the system is ready for the **Role-Based Access Control (RBAC)** implementation.
+With robust authentication and authorization layers now operating flawlessly, the core SCMS domain models and workflows can be developed safely.
+The next developer can begin implementing the **Course Module**:
 
-The upcoming developer can:
-1. Create a `roleMiddleware.js` which verifies if user has specific `req.user.role` (e.g. 'admin', 'teacher').
-2. Apply it additionally alongside `authMiddleware` on routes.
-3. Build new domain specific protected routes.
+1. Use `roleMiddleware('admin')` to restrict creating new courses.
+2. Use `roleMiddleware('admin', 'faculty')` to restrict editing course syllabus.
+3. Allow all authenticated users (students) to `GET` course lists simply using `authMiddleware`.
 
 ---
 
 ## 7. Contribution
 
-**Person 2** — Auth middleware
-- Implemented `authMiddleware.js`
-- Validated `Authorization: Bearer` extraction logic
-- Leveraged `jsonwebtoken` verify method and attached decoded info globally on `req.user`
-- Tested and created `GET /api/auth/profile` route
-- Designed this Result markdown record snippet
+**Person 3** — Role-Based Access Control (RBAC)
+- Developed `roleMiddleware.js` utilizing closure scoping for flexible role parameters.
+- Attached and tested routing access restrictions based on the existing JWT role payload.
+- Wrote admin and faculty scoped test dashboard endpoints.
+- Maintained strict separation of Authentication (`authMiddleware`) versus Authorization (`roleMiddleware`).
+- Designed this Result markdown record snippet.
