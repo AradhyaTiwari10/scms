@@ -1,4 +1,5 @@
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
 const signupService = async (data) => {
@@ -20,4 +21,29 @@ const signupService = async (data) => {
   return { message: "User created successfully", userId: user._id };
 };
 
-module.exports = { signupService };
+const loginService = async ({ email, password }) => {
+  // Find user by email
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  // Compare provided password with stored hashed password
+  const isMatch = await bcrypt.compare(password, user.password);
+
+  if (!isMatch) {
+    throw new Error("Invalid credentials");
+  }
+
+  // 🔥 GENERATE JWT TOKEN
+  const token = jwt.sign(
+    { userId: user._id, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: "1d" }
+  );
+
+  return { message: "Login successful", token };
+};
+
+module.exports = { signupService, loginService };

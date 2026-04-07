@@ -1,4 +1,4 @@
-const { signupService } = require("../services/authService");
+const { signupService, loginService } = require("../services/authService");
 
 const signup = async (req, res) => {
   try {
@@ -9,4 +9,13 @@ const signup = async (req, res) => {
   }
 };
 
-module.exports = { signup };
+const login = async (req, res) => {
+  try {
+    const result = await loginService(req.body);
+    res.json(result);
+  } catch (error) {
+    res.status(401).json({ message: error.message });
+  }
+};
+
+module.exports = { signup, login };
