@@ -1,138 +1,115 @@
-# Login API + JWT Implementation
+# JWT Middleware + Protected Route
 
-## 1. Summary of Login API
+## 1. Summary of Middleware
 
-Person 4 implemented a secure login API for the SCMS backend. Users can now authenticate using their registered email and password. On successful authentication, the server returns a signed **JSON Web Token (JWT)** that the client stores and uses for future authenticated requests.
+Person 2 implemented an authentication middleware to secure the SCMS backend. The middleware intercepts incoming requests, verifies the presence and validity of a strictly formatted JSON Web Token (JWT), and prevents unauthorized users from accessing protected resources by returning a `401 Unauthorized` error if validation fails.
 
 ---
 
-## 2. Files Modified
+## 2. Files Created & Modified
 
 | File | Change |
 |------|--------|
-| `services/authService.js` | Added `loginService` — verifies credentials with bcrypt and generates JWT |
-| `controllers/authController.js` | Added `login` controller — calls `loginService`, sends token in response |
-| `routes/authRoutes.js` | Registered `POST /api/auth/login` route |
-| `.env` | Added `JWT_SECRET` environment variable |
+| `middlewares/authMiddleware.js` | **[NEW]** Added middleware logic to extract and verify JWT tokens |
+| `routes/authRoutes.js` | **[MODIFIED]** Imported `authMiddleware` and created protected `GET /api/auth/profile` route |
 
 ---
 
-## 3. How Authentication Works
+## 3. How JWT Verification Works
 
-```
-Client                    Server
-  |                          |
-  |-- POST /api/auth/login -->|
-  |   { email, password }     |
-  |                          |-- Find user by email in MongoDB
-  |                          |-- bcrypt.compare(password, user.password)
-  |                          |-- jwt.sign({ userId, role }, JWT_SECRET)
-  |<-- { message, token } ---|
+```text
+Client                    Server (authMiddleware)              Protected Route
+  |                                  |                               |
+  |-- GET /profile + JWT Header ---->|                               |
+  |   Authorization: Bearer <token>  |                               |
+  |                                  |-- Validate Header exists      |
+  |                                  |-- Extract Token               |
+  |                                  |-- jwt.verify(token, Secret)   |
+  |                                  |-- Validate success            |
+  |                                  |-- req.user = decoded -------->|
+  |<-- 200 OK: { message, user } ----|-------------------------------|
+  |                                  |                               |
+  |<-- 401 Unauthorized (if fail) ---|                               |
 ```
 
-1. Client sends **email + password** in the request body.
-2. Server looks up the user in MongoDB by email.
-3. Server compares the provided password against the stored **bcrypt hash**.
-4. If both checks pass, server creates and signs a **JWT**.
-5. Token is returned in the JSON response.
+1. Client sends request to protected route including `Authorization: Bearer <token>` in headers.
+2. `authMiddleware` checks for header existence.
+3. Splits header to extract token.
+4. Uses `jsonwebtoken` to verify token string using the `JWT_SECRET`.
+5. Upon successful verification, attaches the decoded payload (like `userId` and `role`) to the `req.user` object to be accessible downstream.
+6. Calls `next()` to proceed to route controller; returns `401 Unauthorized` directly if token is missing or invalid.
 
 ---
 
-## 4. JWT Explanation
-
-**JSON Web Tokens (JWT)** are a compact, URL-safe means of transferring claims between two parties.
-
-### Token Structure
-```
-Header.Payload.Signature
-```
-
-### Payload (what's inside this token)
-```json
-{
-  "userId": "<MongoDB ObjectId>",
-  "role":   "student | teacher | admin",
-  "iat":    1712345678,
-  "exp":    1712432078
-}
-```
-
-- `iat` — issued at (Unix timestamp)
-- `exp` — expires at (issued + 1 day)
-- Token is signed with `JWT_SECRET` from `.env` — tampering invalidates the signature.
-
----
-
-## 5. API Details
+## 4. Protected Route Details
 
 ### Endpoint
 
 ```
-POST /api/auth/login
+GET /api/auth/profile
 ```
 
-### Request Body
-```json
-{
-  "email":    "user@example.com",
-  "password": "yourpassword"
-}
+### Purpose
+Acts as a demonstration of protected resource access requiring valid authentication token, returning the attached parsed user payload.
+
+### Request Headers
+```http
+Authorization: Bearer <your_jwt_token_here>
 ```
 
 ### Success Response — `200 OK`
 ```json
 {
-  "message": "Login successful",
-  "token":   "<JWT string>"
+  "message": "Protected route accessed",
+  "user": {
+    "userId": "<MongoDB ObjectId>",
+    "role": "student",
+    "iat": 1712345678,
+    "exp": 1712432078
+  }
 }
 ```
 
 ### Error Responses
-
 | Scenario | Status | Body |
 |----------|--------|------|
-| User not found | `401` | `{ "message": "User not found" }` |
-| Wrong password | `401` | `{ "message": "Invalid credentials" }` |
+| No token | `401` | `{ "message": "No token provided" }` |
+| Invalid/Expired token | `401` | `{ "message": "Invalid token" }` |
 
 ---
 
-## 6. Current Project Status
+## 5. Current System Status
 
 | Feature | Status |
 |---------|--------|
 | Express server | ✅ Running |
 | MongoDB connection | ✅ Connected |
 | User model | ✅ Implemented |
-| Signup API (`POST /api/auth/signup`) | ✅ Working |
+| Signup API | ✅ Working |
 | Password hashing (bcrypt) | ✅ Implemented |
-| Login API (`POST /api/auth/login`) | ✅ **Implemented (Person 4)** |
-| JWT token generation | ✅ **Implemented (Person 4)** |
-| Auth middleware (protected routes) | ⏳ Next step |
+| Login API + JWT generation | ✅ Implemented |
+| Auth middleware (Protected Routes) | ✅ **Implemented (Person 2)** |
+| Role-based access control (RBAC) | ⏳ Next step |
 
 ---
 
-## 7. Next Step Readiness — Middleware / Protected Routes
+## 6. Next Step Readiness — Role-Based Access Control
 
-The login API returns a JWT. The next team member can use this token to:
+The foundation for protected routes is now solidly in place.
+With the `authMiddleware` verifying standard access and extracting JWT payloads into `req.user`, the system is ready for the **Role-Based Access Control (RBAC)** implementation.
 
-1. Create an `authMiddleware.js` in `/middlewares/` that:
-   - Reads the `Authorization: Bearer <token>` header
-   - Verifies the token with `jwt.verify(token, process.env.JWT_SECRET)`
-   - Attaches `req.user = decoded` for downstream controllers
-2. Apply the middleware to any protected route:
-   ```js
-   router.get("/profile", authMiddleware, getProfile);
-   ```
-
-All groundwork (secret in `.env`, token payload with `userId` + `role`) is already in place.
+The upcoming developer can:
+1. Create a `roleMiddleware.js` which verifies if user has specific `req.user.role` (e.g. 'admin', 'teacher').
+2. Apply it additionally alongside `authMiddleware` on routes.
+3. Build new domain specific protected routes.
 
 ---
 
-## 8. Contribution
+## 7. Contribution
 
-**Person 4** — Login API + JWT Implementation
-- Implemented `loginService` with bcrypt password verification
-- Generated signed JWT token on successful login
-- Wired up controller and route (`POST /api/auth/login`)
-- Added `JWT_SECRET` to `.env`
-- Authored this result document
+**Person 2** — Auth middleware
+- Implemented `authMiddleware.js`
+- Validated `Authorization: Bearer` extraction logic
+- Leveraged `jsonwebtoken` verify method and attached decoded info globally on `req.user`
+- Tested and created `GET /api/auth/profile` route
+- Designed this Result markdown record snippet
