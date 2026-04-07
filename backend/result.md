@@ -1,34 +1,73 @@
-# Signup API Setup
-
-## Summary
-- Implemented user signup API for the SCMS backend
-- Users can now register and be stored in MongoDB
-- Follows the clean `Route → Controller → Service → Database` architecture
+# SCMS Backend — Cumulative Project Status
 
 ---
 
-## Files Created
+## 🔐 Password Hashing Update (Person 3)
 
-| File | Description |
-|------|-------------|
-| `routes/authRoutes.js` | Registers POST `/signup` endpoint |
-| `controllers/authController.js` | Handles request/response, calls service |
-| `services/authService.js` | Contains signup business logic, DB interaction |
+### Summary
+- Added `bcrypt` for secure password hashing
+- Signup now stores encrypted passwords instead of plain text
+- Salt rounds set to **10** for a balanced security/performance tradeoff
 
-### Modified
-| File | Change |
-|------|--------|
-| `server.js` | Imported `authRoutes` and mounted at `/api/auth` |
+### Changes Made
+| File | Type | Description |
+|------|------|-------------|
+| `services/authService.js` | Modified | Added bcrypt import and password hashing logic |
+| `package.json` | Modified | Added `bcrypt` as a dependency |
+| `package-lock.json` | Modified | Updated lock file after bcrypt installation |
+
+### How It Works
+1. User submits signup form with plain-text password
+2. `signupService` intercepts the password before saving
+3. `bcrypt.hash(password, 10)` generates a salted hash
+4. The **hashed password** (not the original) is stored in MongoDB
+5. Original plain-text password is never persisted
+
+```js
+// 🔥 HASH PASSWORD before saving
+const hashedPassword = await bcrypt.hash(password, 10);
+const user = new User({ ...data, password: hashedPassword });
+```
 
 ---
 
-## API Endpoint
+## 📋 Full Project Status
+
+| Feature | Status | Done By |
+|---------|--------|---------|
+| Express server setup | ✅ Complete | Person 1 |
+| MongoDB connection | ✅ Complete | Person 1 |
+| User model | ✅ Complete | Person 1 |
+| Modular architecture (routes → controllers → services) | ✅ Complete | Person 1 |
+| Signup API (`POST /api/auth/signup`) | ✅ Complete | Person 2 |
+| Password hashing (bcrypt) | ✅ Complete | Person 3 |
+| Login API (`POST /api/auth/login`) | ⏳ Not yet | Person 4 |
+| JWT Authentication | ⏳ Not yet | — |
+| Protected routes / middleware | ⏳ Not yet | — |
+
+---
+
+## 🏗️ Architecture
 
 ```
-POST /api/auth/signup
+Client
+  └── POST /api/auth/signup
+        └── authRoutes.js        → router.post("/signup", signup)
+              └── authController.js → calls signupService(req.body)
+                    └── authService.js
+                          ├── Check if email exists (MongoDB query)
+                          ├── bcrypt.hash(password, 10)  ← NEW ✅
+                          ├── new User({ ...data, password: hashedPassword })
+                          └── user.save() → MongoDB
 ```
 
-### Request Body
+---
+
+## 📡 API Reference
+
+### `POST /api/auth/signup`
+
+**Request Body:**
 ```json
 {
   "name": "Vivek",
@@ -38,7 +77,7 @@ POST /api/auth/signup
 }
 ```
 
-### Success Response (201)
+**Success Response (201):**
 ```json
 {
   "message": "User created successfully",
@@ -46,7 +85,7 @@ POST /api/auth/signup
 }
 ```
 
-### Error Response (400)
+**Error Response (400):**
 ```json
 {
   "message": "User already exists"
@@ -55,44 +94,26 @@ POST /api/auth/signup
 
 ---
 
-## Flow
+## 🔜 Next Step — Login API (Person 4)
 
+The Login API should:
+1. Accept `email` + `password` in request body
+2. Find user by email in MongoDB
+3. Use `bcrypt.compare(plainPassword, hashedPassword)` to verify
+4. On success → generate and return a JWT token
+5. On failure → return `401 Unauthorized`
+
+```js
+// Hint for Person 4 — verifying hashed password
+const isMatch = await bcrypt.compare(req.body.password, user.password);
 ```
-Client
-  └── POST /api/auth/signup
-        └── authRoutes.js        → router.post("/signup", signup)
-              └── authController.js → calls signupService(req.body)
-                    └── authService.js    → checks DB, creates User, saves
-                          └── MongoDB (User collection)
-```
 
 ---
 
-## Current Project Status
-
-| Feature | Status |
-|---------|--------|
-| Express server | ✅ Running |
-| MongoDB connection | ✅ Connected |
-| User model | ✅ Ready |
-| Signup API | ✅ Implemented (Person 2) |
-| Password hashing | ⏳ Not yet |
-| Login API | ⏳ Not yet |
-| JWT Auth | ⏳ Not yet |
-
----
-
-## Next Steps
-
-1. **Password Hashing** — Add `bcrypt` to hash passwords before storing in DB
-2. **Login API** — Implement `POST /api/auth/login` with credential verification
-3. **JWT Generation** — Return a token on successful login for protected routes
-
----
-
-## Contributions
+## 👥 Contributions
 
 | Person | Task |
 |--------|------|
-| Person 1 | Express server setup, MongoDB connection, User model, architecture scaffold |
+| Person 1 | Express server, MongoDB connection, User model, architecture scaffold |
 | Person 2 | Signup API — `authRoutes.js`, `authController.js`, `authService.js`, `server.js` update |
+| Person 3 | Password hashing — bcrypt integration in `authService.js` |
