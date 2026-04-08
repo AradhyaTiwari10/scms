@@ -1,4 +1,4 @@
-const { markAttendanceService } = require("../services/attendanceService");
+const { markAttendanceService, getStudentAttendanceService, getCourseAttendanceService } = require("../services/attendanceService");
 
 const markAttendance = async (req, res) => {
   try {
@@ -8,5 +8,22 @@ const markAttendance = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+const getStudentAttendance = async (req, res) => {
+  try {
+    const attendance = await getStudentAttendanceService(req.user.userId);
+    res.json(attendance);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
 
-module.exports = { markAttendance };
+const getCourseAttendance = async (req, res) => {
+  try {
+    const attendance = await getCourseAttendanceService(req.params.courseId);
+    res.json(attendance);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+module.exports = { markAttendance, getStudentAttendance, getCourseAttendance };

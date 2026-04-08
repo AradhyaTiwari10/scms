@@ -18,4 +18,12 @@ const markAttendanceService = async (data) => {
   return attendance;
 };
 
-module.exports = { markAttendanceService };
+const getStudentAttendanceService = async (userId) => {
+  return await Attendance.find({ student: userId }).populate("course", "title");
+};
+
+const getCourseAttendanceService = async (courseId) => {
+  return await Attendance.find({ course: courseId }).populate("student", "name email");
+};
+
+module.exports = { markAttendanceService, getStudentAttendanceService, getCourseAttendanceService };
