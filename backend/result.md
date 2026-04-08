@@ -1,35 +1,36 @@
-# Assignment Submission System Summary
+# View Submissions & Grading System
 
-1. Summary of submission system
-Created the `Submission` model and implemented the `POST /api/submissions` API to allow students to submit an assignment they have been given by storing their text response.
+1. Summary of grading system
+Added the capability for faculty to view assignment submissions and grade them. The grading logic integrates the **Strategy Pattern** to support multiple grading heuristics ("simple" or "passfail").
 
-2. Model fields explanation
-- `student`: ObjectId referencing the `User` model, indicates the student making the submission.
-- `assignment`: ObjectId referencing the `Assignment` model, indicates which assignment the submission belongs to.
-- `submissionText`: String, required. The actual text response submitted by the student.
-- `submittedAt`: Date, defaults to `Date.now()`. Timestamp for the submission.
+2. APIs implemented
+- `GET /api/submissions/:assignmentId`: Viewing submissions by an assignment ID. Replaces IDs with student names and emails. Restricted to `faculty`.
+- `POST /api/submissions/grade`: Receiving a JSON body containing `submissionId`, `marks` and grading `type`. Calculates the grade via Strategy and updates the document. Restricted to `faculty`.
 
-3. API endpoint
-- `POST /api/submissions`: Allows a student to submit their response.
-- Expected JSON Body: `{ "assignmentId": "...", "submissionText": "..." }`
+3. Strategy Pattern explanation
+Instead of hardcoding various grading modes inside the `gradeSubmissionService`, a flexible `gradingContext` determines which function (`simpleGrading` vs `passFailGrading`) is appropriate based on the client provided `type` parameter at runtime. `simpleGrading` just passes back numerical marks while `passFail` outputs a localized string metric based on a score condition.
 
-4. Access control rules
-- Requires a valid authentication token.
-- Specifically restricted to users with the "student" role via RBAC.
+4. Files created/modified
+- modified: `backend/models/Submission.js`
+- modified: `backend/services/submissionService.js`
+- modified: `backend/controllers/submissionController.js`
+- modified: `backend/routes/submissionRoutes.js`
+- new folder: `backend/utils/gradingStrategies`
+- new: `simpleGrading.js`
+- new: `passFailGrading.js`
+- new: `gradingContext.js`
 
-5. Duplicate prevention logic
-- The `submitAssignmentService` first queries for any existing `Submission` where both `assignment` equals `assignmentId` and `student` equals `studentId`. If a document is found, it throws an `"Already submitted"` error.
-
-6. Current system status
+5. Current system status
 - Auth + JWT working ✅
 - RBAC implemented ✅
 - Course system working ✅
 - Enrollment system working ✅
-- Attendance system working (Mark and View) ✅
-- Assignment System setup (Model + Create API) working ✅
+- Attendance system working ✅
+- Assignment System setup ✅
 - Assignment Submission System working ✅
+- Grading System working (via Strategy Pattern) ✅
 
-7. Next step readiness
-- Ready for viewing submissions / grading implementation.
+6. Next step readiness
+- Ready for notifications system utilizing the Observer pattern.
 
-8. Contribution: Person 2 (Submission system)
+7. Contribution: Person 3 (Grading system + Strategy Pattern)
