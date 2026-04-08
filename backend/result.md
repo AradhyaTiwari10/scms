@@ -1,24 +1,19 @@
-# View Submissions & Grading System
+# Observer Pattern (Notification System) Summary
 
-1. Summary of grading system
-Added the capability for faculty to view assignment submissions and grade them. The grading logic integrates the **Strategy Pattern** to support multiple grading heuristics ("simple" or "passfail").
+1. Summary of observer pattern system
+Implemented a decoupled notification mechanism utilizing the Observer Pattern to push event alerts to listeners when core actions happen in the application logic.
 
-2. APIs implemented
-- `GET /api/submissions/:assignmentId`: Viewing submissions by an assignment ID. Replaces IDs with student names and emails. Restricted to `faculty`.
-- `POST /api/submissions/grade`: Receiving a JSON body containing `submissionId`, `marks` and grading `type`. Calculates the grade via Strategy and updates the document. Restricted to `faculty`.
+2. Files created
+- `backend/utils/observer/subject.js`
+- `backend/utils/observer/notificationObserver.js`
+- `backend/utils/observer/index.js`
 
-3. Strategy Pattern explanation
-Instead of hardcoding various grading modes inside the `gradeSubmissionService`, a flexible `gradingContext` determines which function (`simpleGrading` vs `passFailGrading`) is appropriate based on the client provided `type` parameter at runtime. `simpleGrading` just passes back numerical marks while `passFail` outputs a localized string metric based on a score condition.
+3. Where notifications are triggered
+- Inside `backend/services/assignmentService.js`: After successfully saving a new assignment, it triggers `subject.notify("New assignment created")`.
+- Inside `backend/services/submissionService.js`: After successfully grading a student's submission, it triggers `subject.notify("Assignment graded")`.
 
-4. Files created/modified
-- modified: `backend/models/Submission.js`
-- modified: `backend/services/submissionService.js`
-- modified: `backend/controllers/submissionController.js`
-- modified: `backend/routes/submissionRoutes.js`
-- new folder: `backend/utils/gradingStrategies`
-- new: `simpleGrading.js`
-- new: `passFailGrading.js`
-- new: `gradingContext.js`
+4. Observer pattern explanation
+The Observer Pattern is a software design pattern where an object, known as the **Subject**, maintains a list of its dependents, called **Observers** (`NotificationObserver`), and notifies them automatically of any state changes (usually by calling one of their methods, such as `update()`). This decouples the event producers (services) from the event consumers (notification loggers), keeping the code flexible and scalable.
 
 5. Current system status
 - Auth + JWT working ✅
@@ -29,8 +24,9 @@ Instead of hardcoding various grading modes inside the `gradeSubmissionService`,
 - Assignment System setup ✅
 - Assignment Submission System working ✅
 - Grading System working (via Strategy Pattern) ✅
+- Notification System working (via Observer Pattern) ✅
 
-6. Next step readiness
-- Ready for notifications system utilizing the Observer pattern.
+6. Final backend readiness
+The SCMS Node.js backend is now completely mapped out with the specified routes, validations, access controls, business logic services, and specialized behavioral design patterns, and is completely ready for the frontend layer consumption.
 
-7. Contribution: Person 3 (Grading system + Strategy Pattern)
+7. Contribution: Person 1 (Observer Pattern)
