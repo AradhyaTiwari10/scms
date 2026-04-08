@@ -6,6 +6,7 @@ const testRoutes = require("./routes/testRoutes");
 const authRoutes = require("./routes/authRoutes");
 const courseRoutes = require("./routes/courseRoutes");
 const attendanceRoutes = require("./routes/attendanceRoutes");
+const assignmentRoutes = require("./routes/assignmentRoutes");
 
 dotenv.config();
 connectDB();
@@ -19,6 +20,7 @@ app.use("/api", testRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/attendance", attendanceRoutes);
+app.use("/api/assignments", assignmentRoutes);
 
 app.get("/", (req, res) => {
   res.send("SCMS Backend Running");
