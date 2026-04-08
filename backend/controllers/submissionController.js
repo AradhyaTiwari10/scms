@@ -1,31 +1,31 @@
 const { submitAssignmentService, getSubmissionsService, gradeSubmissionService } = require("../services/submissionService");
 
-const submitAssignment = async (req, res) => {
+const submitAssignment = async (req, res, next) => {
   try {
     const { assignmentId, submissionText } = req.body;
     const result = await submitAssignmentService(assignmentId, req.user.userId, submissionText);
-    res.json(result);
+    res.json({ success: true, data: result });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 };
 
-const getSubmissions = async (req, res) => {
+const getSubmissions = async (req, res, next) => {
   try {
     const submissions = await getSubmissionsService(req.params.assignmentId);
-    res.json(submissions);
+    res.json({ success: true, data: submissions });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 };
 
-const gradeSubmission = async (req, res) => {
+const gradeSubmission = async (req, res, next) => {
   try {
     const { submissionId, marks, type } = req.body;
     const result = await gradeSubmissionService(submissionId, marks, type);
-    res.json(result);
+    res.json({ success: true, data: result });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 };
 

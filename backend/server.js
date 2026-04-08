@@ -8,6 +8,8 @@ const courseRoutes = require("./routes/courseRoutes");
 const attendanceRoutes = require("./routes/attendanceRoutes");
 const assignmentRoutes = require("./routes/assignmentRoutes");
 const submissionRoutes = require("./routes/submissionRoutes");
+const errorMiddleware = require("./middlewares/errorMiddleware");
+
 
 dotenv.config();
 connectDB();
@@ -27,6 +29,8 @@ app.use("/api/submissions", submissionRoutes);
 app.get("/", (req, res) => {
   res.send("SCMS Backend Running");
 });
+
+app.use(errorMiddleware);
 
 const PORT = process.env.PORT || 5001;
 

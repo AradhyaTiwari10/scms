@@ -1,21 +1,29 @@
 const { createCourseService, getCoursesService, enrollCourseService } = require("../services/courseService");
 
-const createCourse = async (req, res) => {
-  const course = await createCourseService(req.body);
-  res.json(course);
+const createCourse = async (req, res, next) => {
+  try {
+    const course = await createCourseService(req.body);
+    res.status(201).json({ success: true, data: course });
+  } catch (error) {
+    next(error);
+  }
 };
 
-const getCourses = async (req, res) => {
-  const courses = await getCoursesService();
-  res.json(courses);
+const getCourses = async (req, res, next) => {
+  try {
+    const courses = await getCoursesService();
+    res.json({ success: true, data: courses });
+  } catch (error) {
+    next(error);
+  }
 };
 
-const enrollCourse = async (req, res) => {
+const enrollCourse = async (req, res, next) => {
   try {
     const result = await enrollCourseService(req.params.courseId, req.user.userId);
-    res.json(result);
+    res.json({ success: true, data: result });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 };
 

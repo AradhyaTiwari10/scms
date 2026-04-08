@@ -1,8 +1,12 @@
 const testService = require("../services/testService");
 
-const getTest = (req, res) => {
-  const result = testService();
-  res.send(result);
+const getTest = (req, res, next) => {
+  try {
+    const result = testService();
+    res.json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
 };
 
 module.exports = { getTest };
