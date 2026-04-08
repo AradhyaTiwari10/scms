@@ -1,4 +1,5 @@
 const Submission = require("../models/Submission");
+const gradingContext = require("../utils/gradingStrategies/gradingContext");
 
 const submitAssignmentService = async (assignmentId, studentId, text) => {
   const existing = await Submission.findOne({
@@ -21,4 +22,21 @@ const submitAssignmentService = async (assignmentId, studentId, text) => {
   return { message: "Submission successful" };
 };
 
-module.exports = { submitAssignmentService };
+const getSubmissionsService = async (assignmentId) => {
+  return await Submission.find({ assignment: assignmentId }).populate("student", "name email");
+};
+
+const gradeSubmissionService = async (submissionId, marks, type) => {
+  const submission = await Submission.findById(submissionId);
+  if (!submission) {
+    throw new Error("Submission not found");
+  }
+
+  const grade = gradingContext(type, marks);
+  submission.grade = grade;
+  await submission.save();
+
+  return { message: "Graded successfully", grade };
+};
+
+module.exports = { submitAssignmentService, getSubmissionsService, gradeSubmissionService };
