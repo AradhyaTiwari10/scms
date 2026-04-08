@@ -20,6 +20,9 @@ const submissionSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    grade: {
+      type: mongoose.Schema.Types.Mixed,
+    },
   },
   {
     timestamps: true,
