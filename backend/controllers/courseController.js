@@ -1,4 +1,4 @@
-const { createCourseService, getCoursesService } = require("../services/courseService");
+const { createCourseService, getCoursesService, enrollCourseService } = require("../services/courseService");
 
 const createCourse = async (req, res) => {
   const course = await createCourseService(req.body);
@@ -10,4 +10,13 @@ const getCourses = async (req, res) => {
   res.json(courses);
 };
 
-module.exports = { createCourse, getCourses };
+const enrollCourse = async (req, res) => {
+  try {
+    const result = await enrollCourseService(req.params.courseId, req.user.userId);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+module.exports = { createCourse, getCourses, enrollCourse };
