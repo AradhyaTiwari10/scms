@@ -1,4 +1,5 @@
 const Assignment = require("../models/Assignment");
+const subject = require("../utils/observer");
 
 const createAssignmentService = async (data) => {
   const { title, description, courseId, dueDate } = data;
@@ -15,6 +16,9 @@ const createAssignmentService = async (data) => {
   });
 
   await assignment.save();
+  
+  subject.notify("New assignment created");
+  
   return assignment;
 };
 

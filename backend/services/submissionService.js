@@ -1,5 +1,6 @@
 const Submission = require("../models/Submission");
 const gradingContext = require("../utils/gradingStrategies/gradingContext");
+const subject = require("../utils/observer");
 
 const submitAssignmentService = async (assignmentId, studentId, text) => {
   const existing = await Submission.findOne({
@@ -35,6 +36,8 @@ const gradeSubmissionService = async (submissionId, marks, type) => {
   const grade = gradingContext(type, marks);
   submission.grade = grade;
   await submission.save();
+
+  subject.notify("Assignment graded");
 
   return { message: "Graded successfully", grade };
 };
