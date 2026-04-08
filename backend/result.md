@@ -1,31 +1,35 @@
-# Assignment System (Part 1) Summary
+# Assignment Submission System Summary
 
-1. Summary of assignment system (part 1)
-Created the `Assignment` model to represent course homework/tasks and implemented the `POST /api/assignments` API to allow faculty to create new assignments linked to a generic course.
+1. Summary of submission system
+Created the `Submission` model and implemented the `POST /api/submissions` API to allow students to submit an assignment they have been given by storing their text response.
 
 2. Model fields explanation
-- `title`: String, required. The name of the assignment.
-- `description`: String. Additional details about the task.
-- `course`: ObjectId referencing the `Course` model, required. Links the assignment to a specific course.
-- `dueDate`: Date, required. The deadline for the assignment.
+- `student`: ObjectId referencing the `User` model, indicates the student making the submission.
+- `assignment`: ObjectId referencing the `Assignment` model, indicates which assignment the submission belongs to.
+- `submissionText`: String, required. The actual text response submitted by the student.
+- `submittedAt`: Date, defaults to `Date.now()`. Timestamp for the submission.
 
 3. API endpoint
-- `POST /api/assignments`: Creates an assignment.
-- Expected JSON Body: `{ "title": "...", "description": "...", "courseId": "...", "dueDate": "..." }`
+- `POST /api/submissions`: Allows a student to submit their response.
+- Expected JSON Body: `{ "assignmentId": "...", "submissionText": "..." }`
 
 4. Access control rules
 - Requires a valid authentication token.
-- Specifically restricted to users with the "faculty" role via RBAC.
+- Specifically restricted to users with the "student" role via RBAC.
 
-5. Current system status
+5. Duplicate prevention logic
+- The `submitAssignmentService` first queries for any existing `Submission` where both `assignment` equals `assignmentId` and `student` equals `studentId`. If a document is found, it throws an `"Already submitted"` error.
+
+6. Current system status
 - Auth + JWT working ✅
 - RBAC implemented ✅
 - Course system working ✅
 - Enrollment system working ✅
 - Attendance system working (Mark and View) ✅
 - Assignment System setup (Model + Create API) working ✅
+- Assignment Submission System working ✅
 
-6. Next step readiness
-- Ready for Assignment submission implementation (e.g. students submitting assignments).
+7. Next step readiness
+- Ready for viewing submissions / grading implementation.
 
-7. Contribution: Person 3 (Assignment model + create API)
+8. Contribution: Person 2 (Submission system)
