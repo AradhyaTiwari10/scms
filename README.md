@@ -1,40 +1,65 @@
 # Smart Campus Management System (SCMS)
 
-A comprehensive, scalable, role-based academic management platform designed to manage smart campus facilities, services, courses, and cross-party operations between Admins, Faculty, and Students.
+A scalable, role-based academic management platform built to manage courses, attendance, assignments, submissions, and grading across three user roles: Admin, Faculty, and Student.
 
-## 🛠 Tech Stack
-- **Frontend**: Next.js (Planned)
+---
+
+## Tech Stack
+
 - **Backend**: Node.js, Express.js
 - **Database**: MongoDB (Mongoose)
-- **Security**: JWT Authentication
-- **Architecture**: REST APIs
+- **Authentication**: JSON Web Tokens (JWT)
+- **API Style**: REST
+- **Frontend**: Next.js (Planned)
 
 ---
 
-## ✨ Features
-- **Authentication**: Secure Signup, Login, and JWT Token exchanges.
-- **Role-Based Access Control (RBAC)**: Strict permission boundaries ensuring specific privileges for `Admin`, `Faculty`, and `Student`.
-- **Course Management**: Admins and Faculty can create and maintain active curriculums.
-- **Enrollment System**: Students can effortlessly browse and enroll directly into courses.
-- **Attendance System**: Faculty track, mark, and view active student attendance across classes.
-- **Assignment Management**: Faculty create homework tasks mapped to specific dates and courses.
-- **Assignment Submission System**: Students upload code, answers, or text to fulfill the required assignment conditions safely.
-- **Grading System**: Faculty evaluation logic empowered by algorithmic scaling via the **Strategy Pattern**.
-- **Notification System**: Seamless broadcast routing for updates (assignments, grading) hooking deeply via the **Observer Pattern**.
+## Features
+
+- **Authentication**: Signup, Login, and JWT-based session management.
+- **Role-Based Access Control (RBAC)**: Permission enforcement for `admin`, `faculty`, and `student` roles.
+- **Course Management**: Create and retrieve courses with faculty assignments.
+- **Enrollment System**: Students enroll in courses, with duplicate prevention.
+- **Attendance System**: Faculty mark and view attendance per course. Students view their own records.
+- **Assignment Management**: Faculty create assignments linked to courses with due dates.
+- **Submission System**: Students submit text responses per assignment, with duplicate submission prevention.
+- **Grading System**: Faculty grade submissions using pluggable grading logic via the Strategy Pattern.
+- **Notification System**: Automatic console notifications on key events via the Observer Pattern.
+- **Global Error Handling**: Centralized error middleware with standardized response shapes.
 
 ---
 
-## 🏛 Design Patterns
+## System Design Diagrams
 
-The SCMS Backend leverages sophisticated behavioral design patterns ensuring code stability, scalability, and modularity:
+### System Architecture
 
-* **Strategy Pattern** -> Reusable algorithms abstracted for dynamically evaluating grading logic (`simpleGrading` vs `passFailGrading`), scaling independent rulesets without touching controller code.
-* **Observer Pattern** -> Decentralized notification system allowing decoupled tracking. Faculty actions trigger the `Subject` broadcaster which inherently pings any subscribed instances without breaking native routes.
+![System Architecture](images/system_architecture.png)
+
+### Database Schema (Entity-Relationship)
+
+![Database Schema](images/database_schema.png)
+
+### Design Patterns
+
+![Design Patterns](images/design_patterns.png)
 
 ---
 
-## 🗺 Project Structure
-```text
+## Design Patterns
+
+**Strategy Pattern — Grading Engine**
+
+The grading logic is abstracted into interchangeable strategy functions resolved at runtime. The `gradingContext.js` selects between `simpleGrading` (returns raw marks) and `passFailGrading` (returns "Pass" or "Fail" based on a 40-mark threshold) depending on the `type` parameter passed by the faculty.
+
+**Observer Pattern — Notification System**
+
+A central `Subject` instance maintains a list of subscribed observers. When key events occur (assignment created, submission graded), the subject calls `notify()` which triggers the `update()` method on all registered observers. This decouples event producers from event consumers.
+
+---
+
+## Project Structure
+
+```
 backend/
   ├── config/
   ├── controllers/
@@ -44,32 +69,33 @@ backend/
   ├── middlewares/
   ├── utils/
   │     ├── observer/
-  │     ├── gradingStrategies/
-  ├── server.js
+  │     └── gradingStrategies/
+  └── server.js
 ```
 
 ---
 
-## 🧪 API End-to-End Testing Flow
+## API Testing Flow
 
-Walking through the backend architecture guarantees consistent logical progression via Postman/cURL:
-1. Signup users (Admin, Faculty, Student).
-2. Login and retrieve JWT `Bearer <token>`s.
-3. Create course (Admin).
-4. Enroll student (Student).
-5. Mark attendance (Faculty).
-6. View attendance arrays securely.
-7. Create assignment (Faculty).
-8. Submit assignment (Student).
-9. View submissions (Faculty).
-10. Grade submission (Faculty).
-11. Observe notification logs passively triggering in the system terminal.
+The following end-to-end flow can be tested using Postman:
+
+1. Signup users with roles: admin, faculty, student.
+2. Login with each user to obtain JWT tokens.
+3. Create a course (admin token required).
+4. Enroll a student into the course (student token required).
+5. Mark attendance for the student (faculty token required).
+6. View attendance — faculty by course, student by their own records.
+7. Create an assignment for the course (faculty token required).
+8. Submit an assignment response (student token required).
+9. View all submissions for an assignment (faculty token required).
+10. Grade a submission, specifying `type: "simple"` or `type: "passfail"` (faculty token required).
 
 ---
 
-## 🔗 API Examples
+## API Reference
 
-### Signup (`POST /api/auth/signup`)
+### POST /api/auth/signup
+
 **Request:**
 ```json
 {
@@ -79,6 +105,7 @@ Walking through the backend architecture guarantees consistent logical progressi
   "role": "student"
 }
 ```
+
 **Response:**
 ```json
 {
@@ -87,7 +114,8 @@ Walking through the backend architecture guarantees consistent logical progressi
 }
 ```
 
-### Login (`POST /api/auth/login`)
+### POST /api/auth/login
+
 **Request:**
 ```json
 {
@@ -95,39 +123,44 @@ Walking through the backend architecture guarantees consistent logical progressi
   "password": "Password123"
 }
 ```
+
 **Response:**
 ```json
 {
   "success": true,
-  "data": { "token": "ey..." }
+  "data": { "token": "eyJ..." }
 }
 ```
 
-### Create Course (`POST /api/courses`)
-**Request:** *(Requires `admin` role)*
+### POST /api/courses (admin only)
+
+**Request:**
 ```json
 {
   "title": "Machine Learning 101",
-  "description": "Intro to AI",
-  "faculty": "603d...4b"
+  "description": "Introduction to ML concepts",
+  "faculty": "<faculty_user_id>"
 }
 ```
+
 **Response:**
 ```json
 {
   "success": true,
-  "data": { "title": "Machine Learning 101", "_id": "603d..." }
+  "data": { "_id": "...", "title": "Machine Learning 101" }
 }
 ```
 
-### Submit Assignment (`POST /api/submissions`)
-**Request:** *(Requires `student` role)*
+### POST /api/submissions (student only)
+
+**Request:**
 ```json
 {
-  "assignmentId": "651f...",
-  "submissionText": "My GitHub repo link is..."
+  "assignmentId": "<assignment_id>",
+  "submissionText": "My answer is..."
 }
 ```
+
 **Response:**
 ```json
 {
@@ -136,29 +169,49 @@ Walking through the backend architecture guarantees consistent logical progressi
 }
 ```
 
+### POST /api/submissions/grade (faculty only)
+
+**Request:**
+```json
+{
+  "submissionId": "<submission_id>",
+  "marks": 75,
+  "type": "simple"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": { "message": "Graded successfully", "grade": 75 }
+}
+```
+
 ---
 
-## 🚀 Project Status
+## Project Status
 
 **Backend:**
-- Authentication ✅
-- RBAC ✅
-- Course System ✅
-- Enrollment ✅
-- Attendance ✅
-- Assignment System ✅
-- Submission System ✅
-- Grading (Strategy Pattern) ✅
-- Notifications (Observer Pattern) ✅
-- Global Error Handling/API Polish ✅
+- Authentication — complete
+- Role-Based Access Control — complete
+- Course System — complete
+- Enrollment — complete
+- Attendance — complete
+- Assignment System — complete
+- Submission System — complete
+- Grading (Strategy Pattern) — complete
+- Notifications (Observer Pattern) — complete
+- Global Error Handling — complete
 
 **Frontend:**
-- Not started ⏳
+- Not started
 
 ---
 
-## 🔮 Future Scope
-- **Frontend Integration**: Hooking interfaces natively using generative Google Stitch AI layouts.
-- **Real-time WebSockets**: Integrating `Socket.io` to bounce Observer Pattern logs straight into UI components.
-- **File Uploads**: Extending assignment requirements with AWS S3/Multer pipelines.
-- **Analytics Portals**: Comprehensive Administrator Dashboards monitoring all data flows simultaneously.
+## Future Scope
+
+- Frontend integration using Next.js
+- Real-time notifications via WebSockets (Socket.io)
+- File upload support for assignment submissions (AWS S3 / Multer)
+- Admin analytics dashboard for monitoring system-wide activity
