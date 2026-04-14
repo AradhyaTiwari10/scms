@@ -31,17 +31,14 @@ A scalable, role-based academic management platform built to manage courses, att
 
 ## System Design Diagrams
 
-### System Architecture
+### 1. Entity-Relationship (ER) Diagram
+![ER Diagram](images/ER_diagram.png)
 
-![System Architecture](images/system_architecture.png)
+### 2. Sequence Diagram
+![Sequence Diagram](images/sequence_diagram.png)
 
-### Database Schema (Entity-Relationship)
-
-![Database Schema](images/database_schema.png)
-
-### Design Patterns
-
-![Design Patterns](images/design_patterns.png)
+### 3. Use Case Diagram
+![Use Case Diagram](images/use_case_diagram.png)
 
 ---
 

@@ -18,7 +18,7 @@ const createAssignmentService = async (data) => {
   await assignment.save();
   
   subject.notify("New assignment created");
-  
+            
   return assignment;
 };
 

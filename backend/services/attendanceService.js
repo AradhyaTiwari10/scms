@@ -11,7 +11,6 @@ const markAttendanceService = async (data) => {
     student: studentId,
     course: courseId,
     status
-    // Date is automatically set by the Mongoose schema default
   });
 
   await attendance.save();

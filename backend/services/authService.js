@@ -11,7 +11,7 @@ const signupService = async (data) => {
     throw new Error("User already exists");
   }
 
-  // 🔥 HASH PASSWORD before saving
+  // HASH PASSWORD before saving
   const hashedPassword = await bcrypt.hash(password, 10);
 
   // Create and save new user with hashed password
@@ -36,7 +36,7 @@ const loginService = async ({ email, password }) => {
     throw new Error("Invalid credentials");
   }
 
-  // 🔥 GENERATE JWT TOKEN
+  // GENERATE JWT TOKEN
   const token = jwt.sign(
     { userId: user._id, role: user.role },
     process.env.JWT_SECRET,
