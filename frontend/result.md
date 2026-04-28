@@ -19,11 +19,32 @@
 - GET /api/courses
 - POST /api/courses/enroll/:courseId
 
+# Assignment Page Implementation (Frontend)
+
+## Summary
+- Implemented Assignments Page with submission feature
+- Students can view assignments and submit responses
+
+## Files Created/Modified
+- services/assignmentService.js
+- app/assignments/page.js
+
+## Features
+- Fetch assignments from backend
+- Display assignment details
+- Submit assignment responses
+- Token-based API integration
+
+## API Integration
+- GET /api/assignments
+- POST /api/submissions
+
 ## Current Frontend Status
 - Layout & Navigation ✅
 - Login System ✅
 - Role-based Dashboard ✅
-- Courses Page (Fetch + Enroll) ✅
+- Courses Page ✅
+- Assignments Page (Fetch + Submit) ✅
 
 ## Next Step
-- Assignment Page implementation
+- Route protection + UI polish
