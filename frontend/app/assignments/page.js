@@ -1,25 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { getAssignments, submitAssignment } from "../../services/assignmentService";
+import { isAuthenticated } from "../../utils/auth";
 
 export default function AssignmentsPage() {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [submissionTexts, setSubmissionTexts] = useState({});
-  const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/login");
+    if (!isAuthenticated()) {
+      window.location.href = "/login";
       return;
     }
 
     fetchAssignments();
-  }, [router]);
+  }, []);
 
   const fetchAssignments = async () => {
     try {
@@ -58,16 +56,14 @@ export default function AssignmentsPage() {
     }
   };
 
-  if (loading) {
-    return <div className="p-8 text-center text-gray-500">Loading assignments...</div>;
-  }
+  if (loading) return <div className="p-8 text-center text-gray-500">Loading assignments...</div>;
 
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+    <div className="p-6">
       <h1 className="text-3xl font-bold text-gray-900 mb-6">Assignments</h1>
 
       {error && (
-        <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-6">
+        <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-6 shadow-md">
           {error}
         </div>
       )}
@@ -75,13 +71,13 @@ export default function AssignmentsPage() {
       {assignments.length === 0 && !error ? (
         <p className="text-gray-500 text-center py-8">No assignments available.</p>
       ) : (
-        <div className="space-y-6">
+        <div className="flex flex-col gap-4">
           {assignments.map((assignment) => {
             const id = assignment._id || assignment.id;
             return (
               <div 
                 key={id} 
-                className="bg-white rounded-xl shadow-md border border-gray-100 p-6 flex flex-col hover:shadow-lg transition-shadow duration-200"
+                className="bg-white shadow-md rounded-lg p-4 flex flex-col"
               >
                 <div className="flex justify-between items-start mb-2">
                   <h2 className="text-xl font-bold text-gray-900">{assignment.title}</h2>
@@ -98,7 +94,7 @@ export default function AssignmentsPage() {
                     Your Submission
                   </label>
                   <textarea
-                    className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-3 text-gray-800"
+                    className="w-full border border-gray-300 rounded-lg p-3 mb-3 text-gray-800"
                     rows="3"
                     placeholder="Type your submission here..."
                     value={submissionTexts[id] || ""}
@@ -106,7 +102,7 @@ export default function AssignmentsPage() {
                   />
                   <button
                     onClick={() => handleSubmit(id)}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors focus:ring-4 focus:ring-blue-300"
+                    className="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors"
                   >
                     Submit
                   </button>
