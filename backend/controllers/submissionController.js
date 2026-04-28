@@ -29,4 +29,14 @@ const gradeSubmission = async (req, res, next) => {
   }
 };
 
-module.exports = { submitAssignment, getSubmissions, gradeSubmission };
+const getUserSubmissions = async (req, res, next) => {
+  try {
+    const { getUserSubmissionsService } = require("../services/submissionService");
+    const submissions = await getUserSubmissionsService(req.user.userId);
+    res.json({ success: true, data: submissions });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { submitAssignment, getSubmissions, gradeSubmission, getUserSubmissions };

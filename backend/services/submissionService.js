@@ -1,4 +1,6 @@
 const Submission = require("../models/Submission");
+const Assignment = require("../models/Assignment");
+const Course = require("../models/Course");
 const gradingContext = require("../utils/gradingStrategies/gradingContext");
 const subject = require("../utils/observer");
 
@@ -20,6 +22,20 @@ const submitAssignmentService = async (assignmentId, studentId, text) => {
 
   await submission.save();
 
+  // Notify faculty
+  try {
+    const assignment = await Assignment.findById(assignmentId).populate("course");
+    if (assignment && assignment.course && assignment.course.faculty) {
+      subject.notify({
+        recipient: assignment.course.faculty,
+        message: `New submission for ${assignment.title}`,
+        type: "submission"
+      });
+    }
+  } catch (err) {
+    console.error("Notification Error:", err);
+  }
+
   return { message: "Submission successful" };
 };
 
@@ -28,7 +44,7 @@ const getSubmissionsService = async (assignmentId) => {
 };
 
 const gradeSubmissionService = async (submissionId, marks, type) => {
-  const submission = await Submission.findById(submissionId);
+  const submission = await Submission.findById(submissionId).populate("student");
   if (!submission) {
     throw new Error("Submission not found");
   }
@@ -37,9 +53,18 @@ const gradeSubmissionService = async (submissionId, marks, type) => {
   submission.grade = grade;
   await submission.save();
 
-  subject.notify("Assignment graded");
+  // Notify student
+  subject.notify({
+    recipient: submission.student._id,
+    message: `Your assignment has been graded: ${grade}`,
+    type: "submission"
+  });
 
   return { message: "Graded successfully", grade };
 };
 
-module.exports = { submitAssignmentService, getSubmissionsService, gradeSubmissionService };
+const getUserSubmissionsService = async (studentId) => {
+  return await Submission.find({ student: studentId });
+};
+
+module.exports = { submitAssignmentService, getSubmissionsService, gradeSubmissionService, getUserSubmissionsService };

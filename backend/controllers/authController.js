@@ -18,4 +18,15 @@ const login = async (req, res, next) => {
   }
 };
 
-module.exports = { signup, login };
+const getFaculty = async (req, res, next) => {
+  try {
+    const User = require("../models/User");
+    const faculty = await User.find({ role: "faculty" }).select("-password");
+    console.log(`Found ${faculty.length} faculty members`);
+    res.json({ success: true, data: faculty });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { signup, login, getFaculty };

@@ -1,4 +1,14 @@
-const { createAssignmentService } = require("../services/assignmentService");
+const { createAssignmentService, getAssignmentsService } = require("../services/assignmentService");
+
+const getAssignments = async (req, res, next) => {
+  try {
+    const assignments = await getAssignmentsService();
+    res.json({ success: true, data: assignments });
+  } catch (error) {
+    next(error);
+  }
+};
+
 
 const createAssignment = async (req, res, next) => {
   try {
@@ -9,4 +19,4 @@ const createAssignment = async (req, res, next) => {
   }
 };
 
-module.exports = { createAssignment };
+module.exports = { createAssignment, getAssignments };

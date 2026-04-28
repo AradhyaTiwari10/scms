@@ -7,7 +7,9 @@ const createCourseService = async (data) => {
 };
 
 const getCoursesService = async () => {
-  return await Course.find().populate("faculty", "name email");
+  return await Course.find()
+    .populate("faculty", "name email")
+    .populate("students", "name email");
 };
 
 const enrollCourseService = async (courseId, userId) => {

@@ -45,3 +45,21 @@ export const signupUser = async (userData) => {
     throw error;
   }
 };
+
+export const getFaculty = async () => {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${API_URL}/faculty`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null);
+    throw new Error(errorData?.message || "Failed to fetch faculty list");
+  }
+
+  return response.json();
+};

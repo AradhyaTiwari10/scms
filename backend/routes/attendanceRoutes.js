@@ -5,8 +5,8 @@ const { markAttendance, getStudentAttendance, getCourseAttendance } = require(".
 const authMiddleware = require("../middlewares/authMiddleware");
 const roleMiddleware = require("../middlewares/roleMiddleware");
 
-router.post("/mark", authMiddleware, roleMiddleware("faculty"), markAttendance);
+router.post("/mark", authMiddleware, roleMiddleware("faculty", "admin"), markAttendance);
 router.get("/student", authMiddleware, roleMiddleware("student"), getStudentAttendance);
-router.get("/course/:courseId", authMiddleware, roleMiddleware("faculty"), getCourseAttendance);
+router.get("/course/:courseId", authMiddleware, roleMiddleware("faculty", "admin"), getCourseAttendance);
 
 module.exports = router;
