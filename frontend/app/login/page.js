@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { loginUser } from "@/services/authService";
 
 export default function LoginPage() {
@@ -99,9 +100,9 @@ export default function LoginPage() {
 
         <p className="mt-8 text-center text-sm text-gray-600">
           Don't have an account?{" "}
-          <span className="text-indigo-600 font-semibold cursor-pointer hover:underline">
-            Contact Administration
-          </span>
+          <Link href="/signup" className="text-indigo-600 font-semibold hover:underline">
+            Sign Up
+          </Link>
         </p>
       </div>
     </div>

@@ -22,3 +22,26 @@ export const loginUser = async (email, password) => {
     throw error;
   }
 };
+
+export const signupUser = async (userData) => {
+  try {
+    const response = await fetch(`${API_URL}/signup`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(userData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Signup failed");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Signup Error:", error);
+    throw error;
+  }
+};

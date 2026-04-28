@@ -8,7 +8,7 @@ export default function LayoutWrapper({ children }) {
   const pathname = usePathname();
   
   // Define routes that should NOT have the Sidebar/Navbar
-  const isAuthPage = pathname === "/login";
+  const isAuthPage = pathname === "/login" || pathname === "/signup";
 
   if (isAuthPage) {
     return <main className="flex-1 overflow-y-auto">{children}</main>;
