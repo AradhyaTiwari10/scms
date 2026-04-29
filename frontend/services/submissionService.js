@@ -1,4 +1,5 @@
-const API_URL = "http://localhost:5001/api/submissions";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
+const API_URL = `${BASE_URL}/submissions`;
 
 export const submitAssignment = async (assignmentId, text) => {
   const token = localStorage.getItem("token");

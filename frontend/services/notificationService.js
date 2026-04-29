@@ -1,4 +1,5 @@
-const API_URL = "http://localhost:5001/api/notifications";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
+const API_URL = `${BASE_URL}/notifications`;
 
 export const getNotifications = async () => {
   const token = localStorage.getItem("token");

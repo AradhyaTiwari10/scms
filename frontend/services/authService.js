@@ -1,8 +1,9 @@
-const API_URL = "http://localhost:5001/api/auth";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
+const AUTH_URL = `${API_URL}/auth`;
 
 export const loginUser = async (email, password) => {
   try {
-    const response = await fetch(`${API_URL}/login`, {
+    const response = await fetch(`${AUTH_URL}/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -25,7 +26,7 @@ export const loginUser = async (email, password) => {
 
 export const signupUser = async (userData) => {
   try {
-    const response = await fetch(`${API_URL}/signup`, {
+    const response = await fetch(`${AUTH_URL}/signup`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -48,7 +49,7 @@ export const signupUser = async (userData) => {
 
 export const getFaculty = async () => {
   const token = localStorage.getItem("token");
-  const response = await fetch(`${API_URL}/faculty`, {
+  const response = await fetch(`${AUTH_URL}/faculty`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,

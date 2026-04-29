@@ -1,214 +1,159 @@
 # Smart Campus Management System (SCMS)
 
-A scalable, role-based academic management platform built to manage courses, attendance, assignments, submissions, and grading across three user roles: Admin, Faculty, and Student.
+A production-ready, role-based academic management platform designed to streamline course coordination, student engagement, and administrative oversight. SCMS provides a high-contrast, utilitarian interface for Admins, Faculty, and Students.
 
 ---
 
-## Tech Stack
-
-- **Backend**: Node.js, Express.js
-- **Database**: MongoDB (Mongoose)
-- **Authentication**: JSON Web Tokens (JWT)
-- **API Style**: REST
-- **Frontend**: Next.js (Planned)
+## 🚀 Live Demo
+*   **Frontend**: [https://scms-rust.vercel.app/](https://scms-rust.vercel.app/)
+*   **Backend API**: [https://scms-ux1j.onrender.com](https://scms-ux1j.onrender.com)
 
 ---
 
-## Features
-
-- **Authentication**: Signup, Login, and JWT-based session management.
-- **Role-Based Access Control (RBAC)**: Permission enforcement for `admin`, `faculty`, and `student` roles.
-- **Course Management**: Create and retrieve courses with faculty assignments.
-- **Enrollment System**: Students enroll in courses, with duplicate prevention.
-- **Attendance System**: Faculty mark and view attendance per course. Students view their own records.
-- **Assignment Management**: Faculty create assignments linked to courses with due dates.
-- **Submission System**: Students submit text responses per assignment, with duplicate submission prevention.
-- **Grading System**: Faculty grade submissions using pluggable grading logic via the Strategy Pattern.
-- **Notification System**: Automatic console notifications on key events via the Observer Pattern.
-- **Global Error Handling**: Centralized error middleware with standardized response shapes.
+## 🛠️ Tech Stack
+*   **Frontend**: Next.js 14 (App Router), Tailwind CSS, Lucide Icons
+*   **Backend**: Node.js, Express.js
+*   **Database**: MongoDB Atlas (Mongoose)
+*   **Authentication**: JWT (JSON Web Tokens) with Secure LocalStorage
+*   **State Management**: React Hooks & Context-based polling
 
 ---
 
-## System Design Diagrams
+## ✨ Features
 
-### 1. Entity-Relationship (ER) Diagram
-![ER Diagram](images/ER_diagram.png)
+### 🏛️ For Administrators
+*   **Course Creation**: Define new courses and descriptions.
+*   **Faculty Assignment**: Dynamically assign registered faculty members to courses.
+*   **System Oversight**: Full access to monitor courses and user activity.
 
-### 2. Sequence Diagram
-![Sequence Diagram](images/sequence_diagram.png)
+### 🎓 For Faculty
+*   **Attendance Tracking**: Mark daily attendance (Present/Absent) for all enrolled students in a course.
+*   **Assignment Management**: Create and publish assignments with specific due dates.
+*   **Grading Center**: View student text submissions and assign grades using multiple strategies (Numeric, Letter, Percentage).
 
-### 3. Use Case Diagram
-![Use Case Diagram](images/use_case_diagram.png)
-
----
-
-## Design Patterns
-
-**Strategy Pattern — Grading Engine**
-
-The grading logic is abstracted into interchangeable strategy functions resolved at runtime. The `gradingContext.js` selects between `simpleGrading` (returns raw marks) and `passFailGrading` (returns "Pass" or "Fail" based on a 40-mark threshold) depending on the `type` parameter passed by the faculty.
-
-**Observer Pattern — Notification System**
-
-A central `Subject` instance maintains a list of subscribed observers. When key events occur (assignment created, submission graded), the subject calls `notify()` which triggers the `update()` method on all registered observers. This decouples event producers from event consumers.
+### 📖 For Students
+*   **Course Enrollment**: Browse available courses and enroll in academic tracks.
+*   **Assignment Dashboard**: Submit work directly through the platform and track deadlines.
+*   **Grade Visibility**: View evaluation results and grades instantly on the assignment dashboard.
+*   **Attendance History**: Monitor personal attendance records across all enrolled courses.
 
 ---
 
-## Project Structure
+## 📐 Architecture & System Design
 
-```
-backend/
-  ├── config/
-  ├── controllers/
-  ├── services/
-  ├── routes/
-  ├── models/
-  ├── middlewares/
-  ├── utils/
-  │     ├── observer/
-  │     └── gradingStrategies/
-  └── server.js
-```
+### Class Diagram
+Below is the core entity relationship and class structure of the SCMS platform:
 
----
+```mermaid
+classDiagram
+    direction TB
+    
+    class User {
+        +ObjectId _id
+        +String name
+        +String email
+        +String role ["admin", "faculty", "student"]
+        +Date createdAt
+    }
 
-## API Testing Flow
+    class Course {
+        +ObjectId _id
+        +String title
+        +String description
+        +ObjectId faculty [Ref User]
+        +ObjectId[] students [Ref User]
+        +Date createdAt
+    }
 
-The following end-to-end flow can be tested using Postman:
+    class Assignment {
+        +ObjectId _id
+        +String title
+        +String description
+        +ObjectId course [Ref Course]
+        +Date dueDate
+    }
 
-1. Signup users with roles: admin, faculty, student.
-2. Login with each user to obtain JWT tokens.
-3. Create a course (admin token required).
-4. Enroll a student into the course (student token required).
-5. Mark attendance for the student (faculty token required).
-6. View attendance — faculty by course, student by their own records.
-7. Create an assignment for the course (faculty token required).
-8. Submit an assignment response (student token required).
-9. View all submissions for an assignment (faculty token required).
-10. Grade a submission, specifying `type: "simple"` or `type: "passfail"` (faculty token required).
+    class Submission {
+        +ObjectId _id
+        +ObjectId assignment [Ref Assignment]
+        +ObjectId student [Ref User]
+        +String submissionText
+        +String grade
+        +Date createdAt
+    }
 
----
+    class Attendance {
+        +ObjectId _id
+        +ObjectId course [Ref Course]
+        +Date date
+        +Object[] records [studentId, status]
+    }
 
-## API Reference
+    class Notification {
+        +ObjectId _id
+        +ObjectId recipient [Ref User]
+        +String message
+        +Boolean isRead
+        +Date createdAt
+    }
 
-### POST /api/auth/signup
-
-**Request:**
-```json
-{
-  "name": "Jane Doe",
-  "email": "jane@university.edu",
-  "password": "Password123",
-  "role": "student"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": { "message": "User registered successfully" }
-}
-```
-
-### POST /api/auth/login
-
-**Request:**
-```json
-{
-  "email": "jane@university.edu",
-  "password": "Password123"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": { "token": "eyJ..." }
-}
-```
-
-### POST /api/courses (admin only)
-
-**Request:**
-```json
-{
-  "title": "Machine Learning 101",
-  "description": "Introduction to ML concepts",
-  "faculty": "<faculty_user_id>"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": { "_id": "...", "title": "Machine Learning 101" }
-}
-```
-
-### POST /api/submissions (student only)
-
-**Request:**
-```json
-{
-  "assignmentId": "<assignment_id>",
-  "submissionText": "My answer is..."
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": { "message": "Submission successful" }
-}
-```
-
-### POST /api/submissions/grade (faculty only)
-
-**Request:**
-```json
-{
-  "submissionId": "<submission_id>",
-  "marks": 75,
-  "type": "simple"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": { "message": "Graded successfully", "grade": 75 }
-}
+    %% Relationships
+    User "1" --> "*" Course : "Teaches (Faculty)"
+    User "*" --> "*" Course : "Enrolled (Student)"
+    Course "1" --* "*" Assignment : "Contains"
+    Assignment "1" --* "*" Submission : "Receives"
+    User "1" --* "*" Submission : "Submits"
+    Course "1" --* "*" Attendance : "Tracks"
+    User "1" --* "*" Notification : "Notified"
 ```
 
 ---
 
-## Project Status
+## 🧩 Design Patterns
 
-**Backend:**
-- Authentication — complete
-- Role-Based Access Control — complete
-- Course System — complete
-- Enrollment — complete
-- Attendance — complete
-- Assignment System — complete
-- Submission System — complete
-- Grading (Strategy Pattern) — complete
-- Notifications (Observer Pattern) — complete
-- Global Error Handling — complete
+### 1. Strategy Pattern (Grading Engine)
+The grading logic is abstracted into interchangeable strategies resolved at runtime. This allows the system to support different academic standards (Numeric points vs Letter grades) without changing the core submission logic.
 
-**Frontend:**
-- Not started
+### 2. Observer Pattern (Notification System)
+A central `Subject` maintains a list of subscribers. Whenever a key event occurs (Assignment Created, Submission Graded), the system automatically pushes a persistent `Notification` to the database for the relevant recipient.
 
 ---
 
-## Future Scope
+## 📦 Project Structure
 
-- Frontend integration using Next.js
-- Real-time notifications via WebSockets (Socket.io)
-- File upload support for assignment submissions (AWS S3 / Multer)
-- Admin analytics dashboard for monitoring system-wide activity
+```text
+scms/
+├── frontend/             # Next.js Application
+│   ├── app/              # App Router (Dashboard, Courses, etc.)
+│   ├── components/       # Opaque Sidebar, Navbar, Notifications
+│   └── services/         # API Layer (auth, course, attendance)
+└── backend/              # Node.js/Express API
+    ├── models/           # Mongoose Schemas (User, Course, etc.)
+    ├── controllers/      # Business Logic
+    ├── routes/           # API Endpoints
+    └── utils/            # Strategy & Observer Implementations
+```
+
+---
+
+## ⚙️ Local Setup
+
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/AradhyaTiwari10/scms.git
+    ```
+
+2.  **Backend Configuration**:
+    *   Navigate to `backend/`
+    *   Create a `.env` file with `MONGO_URI`, `JWT_SECRET`, and `PORT=5000`.
+    *   Run `npm install && npm start`.
+
+3.  **Frontend Configuration**:
+    *   Navigate to `frontend/`
+    *   Create a `.env.local` file with `NEXT_PUBLIC_API_URL=http://localhost:5000/api`.
+    *   Run `npm install && npm run dev`.
+
+---
+
+## 📝 License
+This project is part of the SDSE Capstone. Built with ❤️ by Aradhya Tiwari.
