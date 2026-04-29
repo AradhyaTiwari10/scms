@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Cookies from "js-cookie";
 import { loginUser } from "@/services/authService";
 
 export default function LoginPage() {
@@ -24,6 +25,10 @@ export default function LoginPage() {
       if (response.success && response.data?.token) {
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
+        
+        // Set cookie for middleware
+        Cookies.set("token", response.data.token, { expires: 7 }); // Expires in 7 days
+        
         router.push("/dashboard");
       } else {
         setError("Invalid response from server");

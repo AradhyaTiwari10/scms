@@ -2,6 +2,7 @@
 
 import { LogOut, Bell, Settings, User } from "lucide-react";
 import { useEffect, useState } from "react";
+import Cookies from "js-cookie";
 import { getNotifications, markNotificationsAsRead } from "../services/notificationService";
 import { isAuthenticated } from "../utils/auth";
 
@@ -42,8 +43,11 @@ export default function Navbar() {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    Cookies.remove("token");
     window.location.href = "/login";
   };
+
 
   return (
     <header className="sticky top-0 z-50 w-full h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between">

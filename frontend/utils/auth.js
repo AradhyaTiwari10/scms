@@ -1,14 +1,22 @@
+import Cookies from "js-cookie";
+
 export const getToken = () => {
-  return localStorage.getItem("token");
+  if (typeof window !== "undefined") {
+    return Cookies.get("token") || localStorage.getItem("token");
+  }
+  return null;
 };
 
 export const isAuthenticated = () => {
-  return !!localStorage.getItem("token");
+  if (typeof window !== "undefined") {
+    return !!(Cookies.get("token") || localStorage.getItem("token"));
+  }
+  return false;
 };
 
 export const getUserRole = () => {
   try {
-    const token = localStorage.getItem("token");
+    const token = getToken();
     if (!token) return null;
     const payload = JSON.parse(atob(token.split(".")[1]));
     return payload.role || null;
@@ -19,7 +27,7 @@ export const getUserRole = () => {
 
 export const getUserId = () => {
   try {
-    const token = localStorage.getItem("token");
+    const token = getToken();
     if (!token) return null;
     const payload = JSON.parse(atob(token.split(".")[1]));
     return payload.userId || payload.id || null;
@@ -27,3 +35,4 @@ export const getUserId = () => {
     return null;
   }
 };
+
