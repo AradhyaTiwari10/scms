@@ -156,4 +156,4 @@ scms/
 ---
 
 ## 📝 License
-This project is part of the SDSE Capstone. Built with ❤️ by Aradhya Tiwari.
+This project is part of the SDSE Capstone.
